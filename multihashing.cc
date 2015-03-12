@@ -41,6 +41,7 @@ extern "C" {
     #include "x16r.h"
     #include "x16rv2.h"
     #include "neoscrypt.h"
+    #include "zr5.h"
 }
 
 #include "boolberry.h"
@@ -114,6 +115,7 @@ using namespace v8;
  DECLARE_CALLBACK(x15, x15_hash, 32);
  DECLARE_CALLBACK(x16r, x16r_hash, 32);
  DECLARE_CALLBACK(x16rv2, x16rv2_hash, 32);
+ DECLARE_CALLBACK(zr5, zr5_hash, 32);
 
 
 DECLARE_FUNC(scrypt) {
@@ -362,6 +364,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, x16r);
     NAN_EXPORT(target, x16rv2);
     NAN_EXPORT(target, neoscrypt);
+    NAN_EXPORT(target, zr5);
 }
 
 NODE_MODULE(multihashing, init)
