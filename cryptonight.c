@@ -19,6 +19,10 @@
 #define hash_extra_blake(data, length, hash) blake256_hash((uint8_t*)(hash), (uint8_t*)(data), (length))
 #include "crypto/variant4_random_math.h"
 
+#if defined(_MSC_VER)
+#define alloca(size) _alloca(size)
+#endif
+
 #define MEMORY         (1 << 21) /* 2 MiB */
 #define ITER           (1 << 20)
 #define AES_BLOCK_SIZE  16
