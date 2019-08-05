@@ -176,8 +176,8 @@ NAN_METHOD(neoscrypt) {
         return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
     }
 
-    unsigned char *input =  (unsigned char*) Buffer::Data(target);
-    unsigned char *output =  (unsigned char*) malloc(sizeof(char) * 32);
+    char *input =  (char*) Buffer::Data(target);
+    char *output =  (char*) malloc(sizeof(char) * 32);
 
     neoscrypt(input, output, 0);
 
@@ -197,7 +197,7 @@ NAN_METHOD(bcrypt) {
     char * input = Buffer::Data(target);
     char *output = (char*) malloc(sizeof(char) * 32);
 
-    bcrypt_hash(input, output);
+    bcrypt_hash(input, output, 0);
 
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
 }
@@ -554,10 +554,23 @@ NAN_METHOD(cryptonight) {
         if(info[1]->IsBoolean())
             fast = info[1]->ToBoolean()->BooleanValue();
         else if(info[1]->IsUint32())
-            cn_variant = info[1]->Uint32Value();
+            cn_variant = info[1]->ToUint32()->Uint32Value();
         else
-            return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean");
+            return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean or uint32_t");
     }
+
+    if ((cn_variant == 4) && (info.Length() < 3)) {
+        return THROW_ERROR_EXCEPTION("You must provide Argument 3 (block height) for Cryptonight variant 4");
+    }
+
+    if (info.Length() >= 3) {
+        if(info[2]->IsUint32())
+            height = info[2]->ToUint32()->Uint32Value();
+        else
+            return THROW_ERROR_EXCEPTION("Argument 3 should be uint32_t");
+    }
+
+    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
 
     if(!Buffer::HasInstance(target))
         return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
@@ -571,7 +584,7 @@ NAN_METHOD(cryptonight) {
         cryptonight_fast_hash(input, output, input_len);
     else {
         if ((cn_variant == 1) && input_len < 43)
-            RETURN_EXCEPT("Argument must be 43 bytes for monero variant 1");
+            return THROW_ERROR_EXCEPTION ("Argument must be 43 bytes for monero variant 1");
         cryptonight_hash(input, output, input_len, cn_variant, height);
     }
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
@@ -583,13 +596,13 @@ NAN_METHOD(cryptonightfast) {
     uint32_t cn_variant = 0;
 
     if (info.Length() < 1)
-        RETURN_EXCEPT("You must provide one argument.");
+        return THROW_ERROR_EXCEPTION("You must provide one argument.");
 
     if (info.Length() >= 2) {
         if(info[1]->IsBoolean())
             fast = info[1]->ToBoolean()->BooleanValue();
         else if(info[1]->IsUint32())
-            cn_variant = info[1]->Uint32Value();
+            cn_variant = info[1]->ToUint32()->Uint32Value();
         else
             return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean or uint32_t");
     }
@@ -608,7 +621,7 @@ NAN_METHOD(cryptonightfast) {
         cryptonightfast_fast_hash(input, output, input_len);
     else {
         if (cn_variant > 0 && input_len < 43)
-            RETURN_EXCEPT("Argument must be 43 bytes for monero variant 1+");
+            return THROW_ERROR_EXCEPTION("Argument must be 43 bytes for monero variant 1+");
         cryptonightfast_hash(input, output, input_len, cn_variant);
     }
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
