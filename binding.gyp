@@ -9,16 +9,21 @@
                 "boolberry.cc",
                 "c11.c",
                 "cryptonight.c",
-				"cryptonight_fast.c",
+                "cryptonight_fast.c",
+                "dcrypt.c",
                 "fresh.c",
                 "fugue.c",
                 "groestl.c",
                 "hefty1.c",
                 "keccak.c",
                 "lbry.c",
+                "lyra2.c",
+                "lyra2re.c",
+                "lyra2z.c",
                 "nist5.c",
                 "quark.c",
                 "qubit.c",
+                "s3.c",
                 "scryptjane.c",
                 "scryptn.c",
                 "sha1.c",
@@ -27,7 +32,10 @@
                 "skein.c",
                 "x11.c",
                 "x13.c",
+                "x14.c",
                 "x15.c",
+                "Sponge.c",
+                "tribus.c",
                 "sha3/sph_hefty1.c",
                 "sha3/sph_fugue.c",
                 "sha3/aes_helper.c",
@@ -48,6 +56,11 @@
                 "sha3/sph_sha2.c",
                 "sha3/sph_sha2big.c",
                 "sha3/hamsi.c",
+                "sha3/sph_sha2big.c",
+                "whirlpoolx.c",
+                "x11ghost.c",
+                "x16r.c",
+                "zr5.c",
                 "crypto/oaes_lib.c",
                 "crypto/c_keccak.c",
                 "crypto/c_groestl.c",
@@ -61,9 +74,10 @@
             ],
             "include_dirs": [
                 "crypto",
+                "<!(node -e \"require('nan')\")"
             ],
             "cflags_cc": [
-                "-std=c++0x"
+                "-std=c++11"
             ],
         }
     ]
