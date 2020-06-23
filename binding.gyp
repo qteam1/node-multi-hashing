@@ -28,6 +28,7 @@
                 "sha256d.c",
                 "shavite3.c",
                 "skein.c",
+                "timetravel.c",
                 "x11.c",
                 "x13.c",
                 "x14.c",
