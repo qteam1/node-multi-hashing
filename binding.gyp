@@ -66,6 +66,13 @@
                 "crypto/wild_keccak.cpp",
                 "neoscrypt.c",
             ],
+            "xcode_settings": {
+                "CLANG_CXX_LANGUAGE_STANDARD": "c++11",
+
+                "OTHER_CFLAGS": [
+                    "-stdlib=libc++"
+                ],
+            },
             "include_dirs": [
                 "crypto",
                 "<!(node -e \"require('nan')\")"
