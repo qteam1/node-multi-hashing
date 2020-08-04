@@ -8,7 +8,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#ifndef _MSC_VER
 #include <sys/param.h>
+#endif
 
 /*
  * Create GNU compatible endian macros. We use the values for __LITTLE_ENDIAN
