@@ -308,6 +308,8 @@ NAN_METHOD(boolberry) {
 }
 
 NAN_MODULE_INIT(init) {
+#undef NAN_EXPORT
+#define NAN_EXPORT(target, function) Nan::Export(target, #function, function)
     NAN_EXPORT(target, bcrypt);
     NAN_EXPORT(target, blake);
     NAN_EXPORT(target, boolberry);
