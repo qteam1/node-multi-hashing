@@ -7,6 +7,31 @@ node_js:
 - '7'
 - '8'
 - '9'
+- '10'
+- '11'
+- '12'
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-6
+
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+
+    - os: osx
+      osx_image: xcode11.0
+      node_js: 10
+
+install: skip
+
+script:
+  - npm install
+
 deploy:
   provider: npm
   email: zone117x@gmail.com
