@@ -268,6 +268,21 @@ get_cpuid(x86_regs *regs, uint32_t flags) {
 		#define cpuid_bx ebx
 	#endif
 
+#ifdef __clang__
+	#define STRINGIZE(A) STRINGIZE_(A)
+	#define STRINGIZE_(A) #A
+	__asm__ __volatile__(
+		"push %%" STRINGIZE(cpuid_bx) ";\n"
+		"xor %%ecx, %%ecx;\n"
+		"cpuid;\n"
+		"mov %%eax, +0(%1);\n"
+		"mov %%ebx, +4(%1);\n"
+		"mov %%ecx, +8(%1);\n"
+		"mov %%edx, +12(%1);\n"
+		"pop %%" STRINGIZE(cpuid_bx) ";\n"
+		: "+a"(flags) : "S"(regs) : "%ecx", "%edx", "cc"
+	);
+#else
 	asm_gcc()
 		a1(push cpuid_bx)
 		a2(xor ecx, ecx)
@@ -279,6 +294,7 @@ get_cpuid(x86_regs *regs, uint32_t flags) {
 		a1(pop cpuid_bx)
 		asm_gcc_parms() : "+a"(flags) : "S"(regs)  : "%ecx", "%edx", "cc"
 	asm_gcc_end()
+#endif
 #endif
 }
 
