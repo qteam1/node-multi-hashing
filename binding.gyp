@@ -67,10 +67,9 @@
                 "neoscrypt.c",
             ],
             "xcode_settings": {
-                "MACOSX_DEPLOYMENT_TARGET": "10.7",
+                "CLANG_CXX_LANGUAGE_STANDARD": "c++11",
 
                 "OTHER_CFLAGS": [
-                    "-std=c++11",
                     "-stdlib=libc++"
                 ],
             },
