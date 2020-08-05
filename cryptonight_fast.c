@@ -15,6 +15,10 @@
 #include "crypto/int-util.h"
 #include "crypto/hash-ops.h"
 
+#if defined(_MSC_VER)
+#define alloca(size) _alloca(size)
+#endif
+
 #define MEMORY         (1 << 21) /* 2 MiB */
 #define ITER           (1 << 19)
 #define AES_BLOCK_SIZE  16
