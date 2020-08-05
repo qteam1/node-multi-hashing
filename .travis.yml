@@ -25,6 +25,12 @@ matrix:
 
     - os: osx
       osx_image: xcode11.0
+      node_js: 10
+
+install: skip
+
+script:
+  - npm install
 
 deploy:
   provider: npm
