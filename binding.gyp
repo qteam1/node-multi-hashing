@@ -76,6 +76,12 @@
             "cflags_cc": [
                 "-std=c++11"
             ],
+            "conditions": [
+                ['OS == "win"', {
+                    "sources": [ "win32/mman.c" ],
+                    "include_dirs": [ "win32" ]
+                }]
+            ]
         }
     ]
 }
