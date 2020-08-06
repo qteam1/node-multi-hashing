@@ -26,7 +26,7 @@
 #define MAP_FAILED    ((void *) -1)
 
 void* mmap(void* start, size_t length, int prot, int flags, int fd, off_t offset);
-void munmap(void* addr, size_t length);
+int munmap(void* addr, size_t length);
 
 #else
 #include <sys/mman.h>

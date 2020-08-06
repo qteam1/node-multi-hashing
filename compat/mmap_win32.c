@@ -75,9 +75,12 @@ void* mmap(void* start, size_t length, int prot, int flags, int fd, off_t offset
 	return ret;
 }
 
-void munmap(void* addr, size_t length)
+int munmap(void* addr, size_t length)
 {
-	UnmapViewOfFile(addr);
+	if (UnmapViewOfFile(addr))
+		return 0;
+
+	return -1;
 }
 
 #undef DWORD_HI
