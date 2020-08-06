@@ -333,9 +333,9 @@ yescrypt_bsty(const uint8_t * passwd, size_t passwdlen,
     uint8_t * buf, size_t buflen)
 {
 #ifdef WIN32
-	static int initialized = 0;
-	static yescrypt_shared_t shared;
-	static yescrypt_local_t local;
+	static __declspec(thread) int initialized = 0;
+	static __declspec(thread) yescrypt_shared_t shared;
+	static __declspec(thread) yescrypt_local_t local;
 #else
 	static __thread int initialized = 0;
 	static __thread yescrypt_shared_t shared;
