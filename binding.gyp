@@ -65,8 +65,11 @@
                 "crypto/aesb.c",
                 "crypto/wild_keccak.cpp",
                 "neoscrypt.c",
+                "yescrypt/yescrypt-best.c",
+                "yescrypt/yescryptcommon.c",
             ],
             "include_dirs": [
+                ".",
                 "crypto",
                 "<!(node -e \"require('nan')\")"
             ],

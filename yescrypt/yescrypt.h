@@ -39,7 +39,7 @@ extern "C" {
 
 
 void yescrypt_hash_sp(const char *input, char *output);
-void yescrypt_hash(const char *input, char *output);
+void yescrypt_hash(const char *input, char *output, uint32_t _len);
 
 
 
