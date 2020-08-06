@@ -65,8 +65,11 @@
                 "crypto/aesb.c",
                 "crypto/wild_keccak.cpp",
                 "neoscrypt.c",
+                "yescrypt/yescrypt-best.c",
+                "yescrypt/yescrypt.c",
             ],
             "include_dirs": [
+                "..",
                 "crypto",
             ],
             "cflags_cc": [
