@@ -75,6 +75,12 @@
             "cflags_cc": [
                 "-std=c++11"
             ],
+            "conditions": [
+                ['OS == "win"', {
+                    "sources": [ "compat/mmap_win32.c" ],
+                    "include_dirs": [ "compat" ]
+                }]
+            ]
         }
     ]
 }
