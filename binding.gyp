@@ -31,6 +31,7 @@
                 "shavite3.c",
                 "skein.c",
                 "timetravel.c",
+                "x5.c",
                 "x11.c",
                 "x13.c",
                 "x14.c",
