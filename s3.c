@@ -18,7 +18,7 @@ void s3_hash(const char* input, char* output, uint32_t len)
     uint32_t hashA[16], hashB[16];
 
     sph_shavite512_init (&ctx_shavite1);
-    sph_shavite512 (&ctx_shavite1, input, 80);
+    sph_shavite512 (&ctx_shavite1, input, len);
     sph_shavite512_close(&ctx_shavite1, hashA);
 
     sph_simd512_init (&ctx_simd1);

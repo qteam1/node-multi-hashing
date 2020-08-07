@@ -22,6 +22,7 @@ extern "C" {
     #include "nist5.h"
     #include "quark.h"
     #include "qubit.h"
+    #include "s3.h"
     #include "scryptjane.h"
     #include "scryptn.h"
     #include "sha1.h"
@@ -31,6 +32,7 @@ extern "C" {
     #include "sponge.h"
     #include "x11.h"
     #include "x13.h"
+    #include "x14.h"
     #include "x15.h"
     #include "x16r.h"
     #include "x16rv2.h"
@@ -93,12 +95,14 @@ using namespace v8;
  DECLARE_CALLBACK(nist5, nist5_hash, 32);
  DECLARE_CALLBACK(quark, quark_hash, 32);
  DECLARE_CALLBACK(qubit, qubit_hash, 32);
+ DECLARE_CALLBACK(s3, s3_hash, 32);
  DECLARE_CALLBACK(sha1, sha1_hash, 32);
  DECLARE_CALLBACK(sha256d, sha256d_hash, 32);
  DECLARE_CALLBACK(shavite3, shavite3_hash, 32);
  DECLARE_CALLBACK(skein, skein_hash, 32);
  DECLARE_CALLBACK(x11, x11_hash, 32);
  DECLARE_CALLBACK(x13, x13_hash, 32);
+ DECLARE_CALLBACK(x14, x14_hash, 32);
  DECLARE_CALLBACK(x15, x15_hash, 32);
  DECLARE_CALLBACK(x16r, x16r_hash, 32);
  DECLARE_CALLBACK(x16rv2, x16rv2_hash, 32);
@@ -331,6 +335,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, nist5);
     NAN_EXPORT(target, quark);
     NAN_EXPORT(target, qubit);
+    NAN_EXPORT(target, s3);
     NAN_EXPORT(target, scrypt);
     NAN_EXPORT(target, scryptjane);
     NAN_EXPORT(target, scryptn);
@@ -340,6 +345,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, skein);
     NAN_EXPORT(target, x11);
     NAN_EXPORT(target, x13);
+    NAN_EXPORT(target, x14);
     NAN_EXPORT(target, x15);
     NAN_EXPORT(target, x16r);
     NAN_EXPORT(target, x16rv2);
