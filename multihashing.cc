@@ -14,6 +14,8 @@ extern "C" {
     #include "fugue.h"
     #include "groestl.h"
     #include "hefty1.h"
+    #include "jh.h"
+    #include "jha.h"
     #include "keccak.h"
     #include "lbry.h"
     #include "lyra2.h"
@@ -87,6 +89,8 @@ using namespace v8;
  DECLARE_CALLBACK(groestl, groestl_hash, 32);
  DECLARE_CALLBACK(groestlmyriad, groestlmyriad_hash, 32);
  DECLARE_CALLBACK(hefty1, hefty1_hash, 32);
+ DECLARE_CALLBACK(jh, jhhash, 32);
+ DECLARE_CALLBACK(jha, jha_hash, 32);
  DECLARE_CALLBACK(keccak, keccak_hash, 32);
  DECLARE_CALLBACK(lbry, lbry_hash, 32);
  DECLARE_CALLBACK(lyra2re, lyra2re_hash, 32);
@@ -328,6 +332,8 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, groestl);
     NAN_EXPORT(target, groestlmyriad);
     NAN_EXPORT(target, hefty1);
+    NAN_EXPORT(target, jh);
+    NAN_EXPORT(target, jha);
     NAN_EXPORT(target, keccak);
     NAN_EXPORT(target, lbry);
     NAN_EXPORT(target, lyra2re);

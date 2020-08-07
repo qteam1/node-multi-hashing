@@ -14,6 +14,8 @@
                 "fugue.c",
                 "groestl.c",
                 "hefty1.c",
+                "jh.c",
+                "jha.c",
                 "keccak.c",
                 "lbry.c",
                 "lyra2re.c",
