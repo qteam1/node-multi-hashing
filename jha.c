@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "sha3/sph_blake.h"
 #include "sha3/sph_groestl.h"
@@ -37,7 +36,7 @@ void jha_hash(const char* input, char* output, uint32_t len) {
         // Input Hashing with SHA3 512, 88 bytes
         //
         sph_keccak512_init(&ctx_keccak);
-        sph_keccak512 (&ctx_keccak, input, 88);
+        sph_keccak512 (&ctx_keccak, input, len);
         sph_keccak512_close(&ctx_keccak, hash);
 
         //
@@ -80,13 +79,13 @@ void jha_hash(const char* input, char* output, uint32_t len) {
      //
      // JHA V8
      //
-     else if (round_mask == 8) {
+     else {
 
         //
         // Input Hashing with SHA3 512, 80 bytes
         //
         sph_keccak512_init(&ctx_keccak);
-        sph_keccak512 (&ctx_keccak, input, 80);
+        sph_keccak512 (&ctx_keccak, input, len);
         sph_keccak512_close(&ctx_keccak, (&hash));
 
         //
@@ -120,17 +119,6 @@ void jha_hash(const char* input, char* output, uint32_t len) {
         // Return 256bit(32x8)
         //
    	    memcpy(output, hash, 32);
-
      }
-
-     //
-     // Wrong Round Mask Data
-     //
-     else {
-
-		memset(output, 0xFF, 32);
-
-	 }
-
 }
 
