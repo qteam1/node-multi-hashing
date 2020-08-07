@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -6,18 +5,18 @@
 #define HASH_FUNC_COUNT 8                   // Machinecoin: HASH_FUNC_COUNT of 11
 #define HASH_FUNC_COUNT_PERMUTATIONS 40320  // Machinecoin: HASH_FUNC_COUNT!
 
-#include <sha3/sph_blake.h>
-#include <sha3/sph_bmw.h>
-#include <sha3/sph_groestl.h>
-#include <sha3/sph_jh.h>
-#include <sha3/sph_keccak.h>
-#include <sha3/sph_skein.h>
-#include <sha3/sph_luffa.h>
-#include <sha3/sph_cubehash.h>
+#include "sha3/sph_blake.h"
+#include "sha3/sph_bmw.h"
+#include "sha3/sph_groestl.h"
+#include "sha3/sph_jh.h"
+#include "sha3/sph_keccak.h"
+#include "sha3/sph_skein.h"
+#include "sha3/sph_luffa.h"
+#include "sha3/sph_cubehash.h"
 #if HASH_FUNC_COUNT > 8
-#include <sha3/sph_shavite.h>
-#include <sha3/sph_simd.h>
-#include <sha3/sph_echo.h>
+#include "sha3/sph_shavite.h"
+#include "sha3/sph_simd.h"
+#include "sha3/sph_echo.h"
 #endif
 
 #define _ALIGN(x) __attribute__ ((aligned(x)))
@@ -102,7 +101,7 @@ void timetravel_hash(const char* input, char* output, uint32_t len)
 	// Compute the next permuation
 	uint32_t steps = (timestamp - HASH_FUNC_BASE_TIMESTAMP) % HASH_FUNC_COUNT_PERMUTATIONS;
 	for (uint32_t i = 0; i < steps; i++) {
-		next_permutation(permutation, permutation + HASH_FUNC_COUNT);
+		next_permutation((int*)permutation, (int*)permutation + HASH_FUNC_COUNT);
 	}
 
 	for (uint32_t i = 0; i < HASH_FUNC_COUNT; i++) {
