@@ -37,6 +37,7 @@ extern "C" {
     #include "x5.h"
     #include "x11.h"
     #include "x11evo.h"
+    #include "x11gost.h"
     #include "x13.h"
     #include "x14.h"
     #include "x15.h"
@@ -114,6 +115,7 @@ using namespace v8;
  DECLARE_CALLBACK(x5, x5_hash, 32);
  DECLARE_CALLBACK(x11, x11_hash, 32);
  DECLARE_CALLBACK(x11evo, x11evo_hash, 32);
+ DECLARE_CALLBACK(x11gost, x11gost_hash, 32);
  DECLARE_CALLBACK(x13, x13_hash, 32);
  DECLARE_CALLBACK(x14, x14_hash, 32);
  DECLARE_CALLBACK(x15, x15_hash, 32);
@@ -364,6 +366,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, x5);
     NAN_EXPORT(target, x11);
     NAN_EXPORT(target, x11evo);
+    NAN_EXPORT(target, x11gost);
     NAN_EXPORT(target, x13);
     NAN_EXPORT(target, x14);
     NAN_EXPORT(target, x15);
