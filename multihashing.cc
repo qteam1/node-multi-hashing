@@ -34,6 +34,7 @@ extern "C" {
     #include "sponge.h"
     #include "timetravel.h"
     #include "tribus.h"
+    #include "whirlpoolx.h"
     #include "x5.h"
     #include "x11.h"
     #include "x11evo.h"
@@ -112,6 +113,7 @@ using namespace v8;
  DECLARE_CALLBACK(skein, skein_hash, 32);
  DECLARE_CALLBACK(timetravel, timetravel_hash, 32);
  DECLARE_CALLBACK(tribus, tribus_hash, 32);
+ DECLARE_CALLBACK(whirlpoolx, whirlpoolx_hash, 32);
  DECLARE_CALLBACK(x5, x5_hash, 32);
  DECLARE_CALLBACK(x11, x11_hash, 32);
  DECLARE_CALLBACK(x11evo, x11evo_hash, 32);
@@ -363,6 +365,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, skein);
     NAN_EXPORT(target, tribus);
     NAN_EXPORT(target, timetravel);
+    NAN_EXPORT(target, whirlpoolx);
     NAN_EXPORT(target, x5);
     NAN_EXPORT(target, x11);
     NAN_EXPORT(target, x11evo);

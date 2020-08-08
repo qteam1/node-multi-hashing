@@ -32,6 +32,7 @@
                 "skein.c",
                 "timetravel.c",
                 "tribus.c",
+                "whirlpoolx.c",
                 "x5.c",
                 "x11.c",
                 "x11evo.c",
