@@ -53,7 +53,7 @@ extern "C"{
 
 
 // Tables for function F
-const unsigned long long T[8][256] = {
+static const sph_u64 T[8][256] = {
 		{
 				0xE6F87E5C5B711FD0,0x258377800924FA16,0xC849E07E852EA4A8,0x5B4686A18F06C16A,
 				0x0B32E9A2D77B416E,0xABDA37A467815C66,0xF61796A81A686676,0xF5DC0B706391954B,
@@ -585,7 +585,7 @@ const unsigned long long T[8][256] = {
 };
 
 // Constant values for KeySchedule function
-const unsigned char C[12][64] = {
+static const unsigned char C[12][64] = {
 		{
 				0xB1,0x08,0x5B,0xDA,0x1E,0xCA,0xDA,0xE9,0xEB,0xCB,0x2F,0x81,0xC0,0x65,0x7C,0x1F,
 				0x2F,0x6A,0x76,0x43,0x2E,0x45,0xD0,0x16,0x71,0x4E,0xB8,0x8D,0x75,0x85,0xC4,0xFC,
@@ -661,7 +661,7 @@ const unsigned char C[12][64] = {
 };
 
 
-void AddModulo512(const void *a,const void *b,void *c)
+static void AddModulo512(const void *a,const void *b,void *c)
 {
 	unsigned char *A = (unsigned char*) a, *B = (unsigned char*) b;
 	unsigned char *C = (unsigned char*) c;
@@ -745,7 +745,7 @@ void AddModulo512(const void *a,const void *b,void *c)
 #endif
 }
 
-void AddXor512(const void *a,const void *b,void *c)
+static void AddXor512(const void *a,const void *b,void *c)
 {
 	unsigned long long *A = (unsigned long long *) a, *B = (unsigned long long *) b;
 	unsigned long long *C = (unsigned long long *) c;
@@ -768,7 +768,7 @@ void AddXor512(const void *a,const void *b,void *c)
 #endif
 }
 
-void F(unsigned char *state)
+static void F(unsigned char *state)
 {
 	unsigned long long return_state[8];
 	register unsigned long long r = 0;
@@ -864,7 +864,7 @@ void F(unsigned char *state)
 
 #define KeySchedule(K,i) AddXor512(K,C[i],K); F(K);
 
-void E(unsigned char *K,const unsigned char *m, unsigned char *state)
+static void E(unsigned char *K,const unsigned char *m, unsigned char *state)
 {
 #ifdef FULL_UNROLL
 	AddXor512(m,K,state);
