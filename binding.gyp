@@ -44,6 +44,7 @@
                 "x16r.c",
                 "x16rv2.c",
                 "x17.c",
+                "xevan.c",
                 "zr5.c",
                 "sha3/sph_hefty1.c",
                 "sha3/sph_fugue.c",

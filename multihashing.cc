@@ -46,6 +46,7 @@ extern "C" {
     #include "x16r.h"
     #include "x16rv2.h"
     #include "x17.h"
+    #include "xevan.h"
     #include "neoscrypt.h"
     #include "zr5.h"
 }
@@ -127,6 +128,7 @@ using namespace v8;
  DECLARE_CALLBACK(x16r, x16r_hash, 32);
  DECLARE_CALLBACK(x16rv2, x16rv2_hash, 32);
  DECLARE_CALLBACK(x17, x17_hash, 32);
+ DECLARE_CALLBACK(xevan, xevan_hash, 32);
  DECLARE_CALLBACK(zr5, zr5_hash, 32);
 
 
@@ -381,6 +383,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, x16r);
     NAN_EXPORT(target, x16rv2);
     NAN_EXPORT(target, x17);
+    NAN_EXPORT(target, xevan);
     NAN_EXPORT(target, neoscrypt);
     NAN_EXPORT(target, zr5);
 }
