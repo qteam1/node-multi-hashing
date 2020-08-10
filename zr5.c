@@ -188,7 +188,9 @@ void zr5_hash( void* input, void* output, uint32_t len)
 	// according to the Proof of Knowledge setting
 	version &= (~POK_BOOL_MASK);
 	version |= (POK_DATA_MASK & nPoK);
+	#ifdef TEST_VERBOSELY
 	printf("new version field: %u\n", version);
+	#endif
 
 	// and now write it back out to our copy of the input buffer
 	memcpy((uint8_t *)input512, (uint8_t *)&version, 4);
