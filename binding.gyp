@@ -20,6 +20,7 @@
                 "jha.c",
                 "keccak.c",
                 "lbry.c",
+                "luffa.c",
                 "lyra2re.c",
                 "lyra2z.c",
                 "nist5.c",

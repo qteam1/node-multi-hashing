@@ -20,6 +20,7 @@ extern "C" {
     #include "jha.h"
     #include "keccak.h"
     #include "lbry.h"
+    #include "luffa.h"
     #include "lyra2.h"
     #include "lyra2re.h"
     #include "lyra2z.h"
@@ -106,6 +107,7 @@ using namespace v8;
  DECLARE_CALLBACK(jha, jha_hash, 32);
  DECLARE_CALLBACK(keccak, keccak_hash, 32);
  DECLARE_CALLBACK(lbry, lbry_hash, 32);
+ DECLARE_CALLBACK(luffa, luffa_hash, 32);
  DECLARE_CALLBACK(lyra2re, lyra2re_hash, 32);
  DECLARE_CALLBACK(lyra2rev2, lyra2rev2_hash, 32);
  DECLARE_CALLBACK(lyra2rev3, lyra2rev3_hash, 32);
@@ -360,6 +362,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, jha);
     NAN_EXPORT(target, keccak);
     NAN_EXPORT(target, lbry);
+    NAN_EXPORT(target, luffa);
     NAN_EXPORT(target, lyra2re);
     NAN_EXPORT(target, lyra2rev2);
     NAN_EXPORT(target, lyra2rev3);
