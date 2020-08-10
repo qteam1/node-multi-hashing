@@ -8,6 +8,7 @@ extern "C" {
     #include "bcrypt.h"
     #include "blake.h"
     #include "blake2b.h"
+    #include "blake2s.h"
     #include "c11.h"
     #include "cryptonight.h"
     #include "cryptonight_fast.h"
@@ -94,6 +95,7 @@ using namespace v8;
  DECLARE_CALLBACK(bcrypt, bcrypt_hash, 32);
  DECLARE_CALLBACK(blake, blake_hash, 32);
  DECLARE_CALLBACK(blake2b, blake2b_hash, 32);
+ DECLARE_CALLBACK(blake2s, blake2s_hash, 32);
  DECLARE_CALLBACK(c11, c11_hash, 32);
  DECLARE_CALLBACK(fresh, fresh_hash, 32);
  DECLARE_CALLBACK(fugue, fugue_hash, 32);
@@ -344,6 +346,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, bcrypt);
     NAN_EXPORT(target, blake);
     NAN_EXPORT(target, blake2b);
+    NAN_EXPORT(target, blake2s);
     NAN_EXPORT(target, boolberry);
     NAN_EXPORT(target, c11);
     NAN_EXPORT(target, cryptonight);
