@@ -110,7 +110,7 @@ static void evo_twisted_code(uint32_t ntime, char *permstr)
 	}
 }
 
-void x11evo_hash(const char *input, char *output, uint32_t len)
+void x11evo_hash(const char *input, char *output, uint32_t len, uint32_t timestamp)
 {
 	uint32_t hash[64/4];
 
@@ -126,11 +126,8 @@ void x11evo_hash(const char *input, char *output, uint32_t len)
 	sph_simd512_context      ctx_simd1;
 	sph_echo512_context      ctx_echo1;
 
-	if (s_sequence == -1) {
-		uint32_t *data = (uint32_t*) input;
-		const uint32_t ntime = data[17];
-		evo_twisted_code(ntime, hashOrder);
-	}
+	const uint32_t ntime = timestamp;
+	evo_twisted_code(ntime, hashOrder);
 
 	void *in = (void*) input;
 	int size = len;

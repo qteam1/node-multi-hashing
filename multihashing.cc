@@ -124,7 +124,6 @@ using namespace v8;
  DECLARE_CALLBACK(whirlpoolx, whirlpoolx_hash, 32);
  DECLARE_CALLBACK(x5, x5_hash, 32);
  DECLARE_CALLBACK(x11, x11_hash, 32);
- DECLARE_CALLBACK(x11evo, x11evo_hash, 32);
  DECLARE_CALLBACK(x11gost, x11gost_hash, 32);
  DECLARE_CALLBACK(x13, x13_hash, 32);
  DECLARE_CALLBACK(x14, x14_hash, 32);
@@ -360,6 +359,27 @@ DECLARE_FUNC(timetravel) {
     uint32_t input_len = Buffer::Length(target);
 
     timetravel_hash(input, output, input_len, timestamp);
+
+    SET_BUFFER_RETURN(output, 32);
+}
+
+DECLARE_FUNC(x11evo) {
+    if (info.Length() < 2)
+        RETURN_EXCEPT("You must provide buffer to hash and timstamp.");
+
+    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
+
+    if(!Buffer::HasInstance(target))
+        RETURN_EXCEPT("Argument should be a buffer object.");
+
+    uint32_t timestamp = Nan::To<uint32_t>(info[1]).ToChecked();
+
+    char * input = Buffer::Data(target);
+    char output[32];
+
+    uint32_t input_len = Buffer::Length(target);
+
+    x11evo_hash(input, output, input_len, timestamp);
 
     SET_BUFFER_RETURN(output, 32);
 }
