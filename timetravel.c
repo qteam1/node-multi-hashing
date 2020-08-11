@@ -68,14 +68,13 @@ static void next_permutation(int *pbegin, int *pend) {
 }
 // helpers
 
-void timetravel_hash(const char* input, char* output, uint32_t len)
+void timetravel_hash(const char* input, char* output, uint32_t len, uint32_t timestamp)
 {
 	uint32_t _ALIGN(64) hash[16 * HASH_FUNC_COUNT];
 	uint32_t *hashA, *hashB;
-	uint32_t dataLen = 64;
-	uint32_t *work_data = (uint32_t *)input;
-	const uint32_t timestamp = work_data[17];
-
+	uint32_t dataLen = len;
+	hashA = (uint32_t *)input;
+	hashB = hash;
 
 	sph_blake512_context     ctx_blake;
 	sph_bmw512_context       ctx_bmw;
@@ -95,7 +94,7 @@ void timetravel_hash(const char* input, char* output, uint32_t len)
 	// integers where every integer represents its own algorithm.
 	uint32_t permutation[HASH_FUNC_COUNT];
 	for (uint32_t i = 0; i < HASH_FUNC_COUNT; i++) {
-			permutation[i]=i;
+		permutation[i]=i;
 	}
 
 	// Compute the next permuation
@@ -105,15 +104,6 @@ void timetravel_hash(const char* input, char* output, uint32_t len)
 	}
 
 	for (uint32_t i = 0; i < HASH_FUNC_COUNT; i++) {
-		if (i == 0) {
-			dataLen = len;
-			hashA = work_data;
-		} else {
-			dataLen = 64;
-			hashA = &hash[16 * (i - 1)];
-		}
-		hashB = &hash[16 * i];
-
 		switch(permutation[i]) {
 			case 0:
 				sph_blake512_init(&ctx_blake);
@@ -175,6 +165,9 @@ void timetravel_hash(const char* input, char* output, uint32_t len)
 			default:
 				break;
 		}
+		dataLen = 64;
+		hashA = hashB;
+		hashB = &hashB[16];
 	}
 
 	memcpy(output, &hash[16 * (HASH_FUNC_COUNT - 1)], 32);

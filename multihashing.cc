@@ -120,7 +120,6 @@ using namespace v8;
  DECLARE_CALLBACK(sha256d, sha256d_hash, 32);
  DECLARE_CALLBACK(shavite3, shavite3_hash, 32);
  DECLARE_CALLBACK(skein, skein_hash, 32);
- DECLARE_CALLBACK(timetravel, timetravel_hash, 32);
  DECLARE_CALLBACK(tribus, tribus_hash, 32);
  DECLARE_CALLBACK(whirlpoolx, whirlpoolx_hash, 32);
  DECLARE_CALLBACK(x5, x5_hash, 32);
@@ -340,6 +339,27 @@ DECLARE_FUNC(boolberry) {
     uint64_t spad_len = Buffer::Length(target_spad);
 
     boolberry_hash(input, input_len, scratchpad, spad_len, output, height);
+
+    SET_BUFFER_RETURN(output, 32);
+}
+
+DECLARE_FUNC(timetravel) {
+    if (info.Length() < 2)
+        RETURN_EXCEPT("You must provide buffer to hash and timstamp.");
+
+    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
+
+    if(!Buffer::HasInstance(target))
+        RETURN_EXCEPT("Argument should be a buffer object.");
+
+    uint32_t timestamp = Nan::To<uint32_t>(info[1]).ToChecked();
+
+    char * input = Buffer::Data(target);
+    char output[32];
+
+    uint32_t input_len = Buffer::Length(target);
+
+    timetravel_hash(input, output, input_len, timestamp);
 
     SET_BUFFER_RETURN(output, 32);
 }

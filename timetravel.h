@@ -7,7 +7,7 @@ extern "C" {
 
 #include <stdint.h>
 
-void timetravel_hash(const char* input, char* output, uint32_t len);
+void timetravel_hash(const char* input, char* output, uint32_t len, uint32_t timestamp);
 
 #ifdef __cplusplus
 }
