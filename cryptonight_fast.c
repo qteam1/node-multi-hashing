@@ -11,11 +11,19 @@
 #include <unistd.h>
 #endif
 #include "crypto/oaes_lib.h"
+#define USE_SPH
+#ifdef USE_SPH
+#include "../sha3/sph_blake.h"
+#include "../sha3/sph_groestl.h"
+#include "../sha3/sph_jh.h"
+#include "../sha3/sph_skein.h"
+#else
 #include "crypto/c_keccak.h"
 #include "crypto/c_groestl.h"
 #include "crypto/c_blake256.h"
 #include "crypto/c_jh.h"
 #include "crypto/c_skein.h"
+#endif
 #include "crypto/int-util.h"
 #include "crypto/hash-ops.h"
 
@@ -60,21 +68,53 @@ union cn_slow_hash_state {
 #pragma pack(pop)
 
 static void do_fast_blake_hash(const void* input, size_t len, char* output) {
+#ifndef USE_SPH
     blake256_hash((uint8_t*)output, input, len);
+#else
+    sph_blake256_context     ctx_blake;
+
+    sph_blake256_set_rounds(14); // 14-rounds
+    sph_blake256_init(&ctx_blake);
+    sph_blake256 (&ctx_blake, input, len);
+    sph_blake256_close (&ctx_blake, output);
+#endif
 }
 
 void do_fast_groestl_hash(const void* input, size_t len, char* output) {
+#ifndef USE_SPH
     groestl(input, len * 8, (uint8_t*)output);
+#else
+    sph_groestl256_context ctx_groestl;
+
+    sph_groestl256_init(&ctx_groestl);
+    sph_groestl256 (&ctx_groestl, input, len);
+    sph_groestl256_close(&ctx_groestl, output);
+#endif
 }
 
 static void do_fast_jh_hash(const void* input, size_t len, char* output) {
+#ifndef USE_SPH
     int r = jh_hash(HASH_SIZE * 8, input, 8 * len, (uint8_t*)output);
     assert(SUCCESS == r);
+#else
+    sph_jh256_context ctx_jh;
+
+    sph_jh256_init(&ctx_jh);
+    sph_jh256(&ctx_jh, input, len);
+    sph_jh256_close(&ctx_jh, output);
+#endif
 }
 
 static void do_fast_skein_hash(const void* input, size_t len, char* output) {
+#ifndef USE_SPH
     int r = c_skein_hash(8 * HASH_SIZE, input, 8 * len, (uint8_t*)output);
     assert(SKEIN_SUCCESS == r);
+#else
+    sph_skein256_context ctx_skein;
+    sph_skein256_init(&ctx_skein);
+    sph_skein256(&ctx_skein, input, len);
+    sph_skein256_close(&ctx_skein, output);
+#endif
 }
 
 static void (* const extra_hashes[4])(const void *, size_t, char *) = {
