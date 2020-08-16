@@ -54,6 +54,8 @@
                 "sha3/sph_sha2big.c",
                 "sha3/sph_tiger.c",
                 "sha3/hamsi.c",
+                "crypto/ethash.c",
+                "crypto/sha3.c",
                 "crypto/lyra2.c",
                 "crypto/sponge.c",
                 "crypto/oaes_lib.c",

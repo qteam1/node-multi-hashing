@@ -5,11 +5,14 @@
 #include <nan.h>
 
 extern "C" {
+    #include "sha3/sph_types.h"
+
     #include "bcrypt.h"
     #include "blake.h"
     #include "c11.h"
     #include "cryptonight.h"
     #include "cryptonight_fast.h"
+    #include "ethash.h"
     #include "fresh.h"
     #include "fugue.h"
     #include "groestl.h"
@@ -103,6 +106,37 @@ using namespace v8;
  DECLARE_CALLBACK(x16r, x16r_hash, 32);
  DECLARE_CALLBACK(x16rv2, x16rv2_hash, 32);
 
+DECLARE_FUNC(ethash) {
+    if (info.Length() < 3)
+        RETURN_EXCEPT("You must provide buffer to header, height value, and nonce value");
+
+    Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
+
+    if(!Buffer::HasInstance(target))
+        RETURN_EXCEPT("Argument should be a buffer object.");
+
+    uint64_t height = Nan::To<int64_t>(info[1]).ToChecked();
+    uint64_t nonce = 0;
+    if (info[2]->IsNumber()) {
+        nonce = Nan::To<int64_t>(info[2]).ToChecked();
+    } else {
+        Local<Object> temp = Nan::To<Object>(info[2]).ToLocalChecked();
+        char *noncestr = Buffer::Data(temp);
+        memcpy(&nonce, noncestr, sizeof(uint64_t));
+        nonce = sph_bswap64(nonce);
+    }
+
+    char *input = Buffer::Data(target);
+    char output[64];
+
+    uint32_t input_len = Buffer::Length(target);
+    if (input_len < 32)
+        RETURN_EXCEPT("Argument must be 32 bytes");
+
+    ethash_hash(input, output, height, nonce);
+
+    SET_BUFFER_RETURN(output, 64);
+}
 
 DECLARE_FUNC(scrypt) {
    if (info.Length() < 3)
@@ -317,6 +351,7 @@ NAN_MODULE_INIT(init) {
     NAN_EXPORT(target, c11);
     NAN_EXPORT(target, cryptonight);
     NAN_EXPORT(target, cryptonightfast);
+    NAN_EXPORT(target, ethash);
     NAN_EXPORT(target, fresh);
     NAN_EXPORT(target, fugue);
     NAN_EXPORT(target, groestl);
