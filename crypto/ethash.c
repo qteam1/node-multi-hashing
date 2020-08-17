@@ -5,6 +5,37 @@
 #include "ethash.h"
 #include "sha3.h"
 
+#if defined(_MSC_VER)
+     /* Microsoft C/C++-compatible compiler */
+     #include <intrin.h>
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+     /* GCC-compatible compiler, targeting x86/x86-64 */
+     #include <x86intrin.h>
+#elif defined(__GNUC__) && defined(__ARM_NEON__)
+     /* GCC-compatible compiler, targeting ARM with NEON */
+     #include <arm_neon.h>
+#elif defined(__GNUC__) && defined(__IWMMXT__)
+     /* GCC-compatible compiler, targeting ARM with WMMX */
+     #include <mmintrin.h>
+#elif (defined(__GNUC__) || defined(__xlC__)) && (defined(__VEC__) || defined(__ALTIVEC__))
+     /* XLC or GCC-compatible compiler, targeting PowerPC with VMX/VSX */
+     #include <altivec.h>
+#elif defined(__GNUC__) && defined(__SPE__)
+     /* GCC-compatible compiler, targeting PowerPC with SPE */
+     #include <spe.h>
+#endif
+
+#ifdef __AVX2__
+#define ENABLE_AVX2 1
+#else
+#define ENABLE_AVX2 0
+#ifdef __SSE2__
+#define ENABLE_SSE 1
+#else
+#define ENABLE_SSE 0
+#endif
+#endif
+
 #define FNV_PRIME    0x01000193
 
 #define NODE_WORDS (64/4)
@@ -20,6 +51,18 @@ typedef union _node
     uint32_t words[16];
     uint64_t double_words[16 / 2];
 } node;
+
+#if ENABLE_SSE
+typedef struct _node128
+{
+    __m128i xmm[NODE_WORDS/2];
+} node128;
+#elif ENABLE_AVX2
+typedef struct _node256
+{
+    __m256i ymm[NODE_WORDS/4];
+} node256;
+#endif
 
 typedef struct ethash_h256 { uint8_t b[32]; } ethash_h256_t;
 
@@ -50,9 +93,25 @@ static void ethash_generate_cache(uint8_t *cache_nodes_in, const uint8_t *seedha
             uint32_t const idx = cache_nodes[i].words[0] % num_nodes;
             node data;
             data = cache_nodes[(num_nodes - 1 + i) % num_nodes];
+#if ENABLE_SSE
+            node128 *data128 = (node128 *)&data;
+            node128 *cache128 = (node128 *)&cache_nodes[idx];
+
+            data128->xmm[0] = _mm_xor_si128(data128->xmm[0], cache128->xmm[0]);
+            data128->xmm[1] = _mm_xor_si128(data128->xmm[1], cache128->xmm[1]);
+            data128->xmm[2] = _mm_xor_si128(data128->xmm[2], cache128->xmm[2]);
+            data128->xmm[3] = _mm_xor_si128(data128->xmm[3], cache128->xmm[3]);
+#elif ENABLE_AVX2
+            node256 *data256 = (node256 *)&data;
+            node256 *cache256 = (node256 *)&cache_nodes[idx];
+
+            data256->ymm[0] = _mm256_xor_si256(data256->ymm[0], cache256->ymm[0]);
+            data256->ymm[1] = _mm256_xor_si256(data256->ymm[1], cache256->ymm[1]);
+#else
             for (uint32_t w = 0; w < NODE_WORDS; ++w) { // this one can be unrolled entirely as well
                 data.words[w] ^= cache_nodes[idx].words[w];
             }
+#endif
 
             SHA3_512(cache_nodes[i].bytes, data.bytes, sizeof(data));
         }
@@ -66,14 +125,57 @@ node ethash_calc_dag_item(const node *cache_nodes, uint32_t num_nodes, uint32_t 
     dag_node.words[0] ^= node_index;
 
     SHA3_512(dag_node.bytes, dag_node.bytes, sizeof(node));
+#if ENABLE_SSE
+    node128 *dag128 = (node128 *)&dag_node;
+    __m128i const fnv_prime = _mm_set1_epi32(FNV_PRIME);
+    __m128i xmm0 = dag128->xmm[0];
+    __m128i xmm1 = dag128->xmm[1];
+    __m128i xmm2 = dag128->xmm[2];
+    __m128i xmm3 = dag128->xmm[3];
+#elif ENABLE_AVX2
+    node256 *dag256 = (node256 *)&dag_node;
+    __m256i const fnv_prime = _mm256_set1_epi32(FNV_PRIME);
+    __m256i ymm0 = dag256->ymm[0];
+    __m256i ymm1 = dag256->ymm[1];
+#endif
 
     for (uint32_t i = 0; i < ETHASH_DATASET_PARENTS; ++i) {
         uint32_t parent_index = fnv(node_index ^ i, dag_node.words[i % NODE_WORDS]) % num_nodes;
+#if ENABLE_SSE
+        node128 *parent = (node128 *)&cache_nodes[parent_index];
+
+        xmm0 = _mm_mullo_epi32(xmm0, fnv_prime);
+        xmm1 = _mm_mullo_epi32(xmm1, fnv_prime);
+        xmm2 = _mm_mullo_epi32(xmm2, fnv_prime);
+        xmm3 = _mm_mullo_epi32(xmm3, fnv_prime);
+        xmm0 = _mm_xor_si128(xmm0, parent->xmm[0]);
+        xmm1 = _mm_xor_si128(xmm1, parent->xmm[1]);
+        xmm2 = _mm_xor_si128(xmm2, parent->xmm[2]);
+        xmm3 = _mm_xor_si128(xmm3, parent->xmm[3]);
+
+        // have to write to ret as values are used to compute index
+        dag128->xmm[0] = xmm0;
+        dag128->xmm[1] = xmm1;
+        dag128->xmm[2] = xmm2;
+        dag128->xmm[3] = xmm3;
+#elif ENABLE_AVX2
+        node256 *parent = (node256 *)&cache_nodes[parent_index];
+
+        ymm0 = _mm256_mullo_epi32(ymm0, fnv_prime);
+        ymm1 = _mm256_mullo_epi32(ymm1, fnv_prime);
+        ymm0 = _mm256_xor_si256(ymm0, parent->ymm[0]);
+        ymm1 = _mm256_xor_si256(ymm1, parent->ymm[1]);
+
+        // have to write to ret as values are used to compute index
+        dag256->ymm[0] = ymm0;
+        dag256->ymm[1] = ymm1;
+#else
         node const *parent = &cache_nodes[parent_index];
 
         for (uint32_t j = 0; j < NODE_WORDS; ++j) {
             dag_node.words[j] = fnv(dag_node.words[j], parent->words[j]);
         }
+#endif
     }
 
     SHA3_512(dag_node.bytes, dag_node.bytes, sizeof(node));
@@ -132,6 +234,14 @@ void ethash_hash(const char* input, char* output, uint64_t height, uint64_t nonc
     }
 #endif
 
+#if ENABLE_SSE
+    node128 *mix128 = (node128 *)mixstate;
+    __m128i fnv_prime = _mm_set1_epi32(FNV_PRIME);
+#elif ENABLE_AVX2
+    node256 *mix256 = (node256 *)mixstate;
+    __m256i fnv_prime = _mm256_set1_epi32(FNV_PRIME);
+#endif
+
     dagsize = ethash_get_dag_size(epoch) / (sizeof(node) << 1);
 
     // Main mix of Ethash
@@ -141,11 +251,45 @@ void ethash_hash(const char* input, char* output, uint64_t height, uint64_t nonc
         node dagslice_nodes[2];
         dagslice_nodes[0] = ethash_calc_dag_item(dag_cache, num_nodes, (index << 1) + 0);
         dagslice_nodes[1] = ethash_calc_dag_item(dag_cache, num_nodes, (index << 1) + 1);
+#if ENABLE_SSE
+        node128 *dag128 = (node128 *)dagslice_nodes;
+#elif ENABLE_AVX2
+        node256 *dag256 = (node256 *)dagslice_nodes;
+#else
         uint32_t *dagslice = (uint32_t *)dagslice_nodes;
+#endif
 
+#if ENABLE_SSE
+        __m128i xmm0 = _mm_mullo_epi32(fnv_prime, mix128->xmm[0]);
+        __m128i xmm1 = _mm_mullo_epi32(fnv_prime, mix128->xmm[1]);
+        __m128i xmm2 = _mm_mullo_epi32(fnv_prime, mix128->xmm[2]);
+        __m128i xmm3 = _mm_mullo_epi32(fnv_prime, mix128->xmm[3]);
+        __m128i xmm4 = _mm_mullo_epi32(fnv_prime, mix128->xmm[4]);
+        __m128i xmm5 = _mm_mullo_epi32(fnv_prime, mix128->xmm[5]);
+        __m128i xmm6 = _mm_mullo_epi32(fnv_prime, mix128->xmm[6]);
+        __m128i xmm7 = _mm_mullo_epi32(fnv_prime, mix128->xmm[7]);
+        mix128->xmm[0] = _mm_xor_si128(xmm0, dag128->xmm[0]);
+        mix128->xmm[1] = _mm_xor_si128(xmm1, dag128->xmm[1]);
+        mix128->xmm[2] = _mm_xor_si128(xmm2, dag128->xmm[2]);
+        mix128->xmm[3] = _mm_xor_si128(xmm3, dag128->xmm[3]);
+        mix128->xmm[4] = _mm_xor_si128(xmm4, dag128->xmm[4]);
+        mix128->xmm[5] = _mm_xor_si128(xmm5, dag128->xmm[5]);
+        mix128->xmm[6] = _mm_xor_si128(xmm6, dag128->xmm[6]);
+        mix128->xmm[7] = _mm_xor_si128(xmm7, dag128->xmm[7]);
+#elif ENABLE_AVX2
+        __m256i ymm0 = _mm256_mullo_epi32(fnv_prime, mix256->ymm[0]);
+        __m256i ymm1 = _mm256_mullo_epi32(fnv_prime, mix256->ymm[1]);
+        __m256i ymm2 = _mm256_mullo_epi32(fnv_prime, mix256->ymm[2]);
+        __m256i ymm3 = _mm256_mullo_epi32(fnv_prime, mix256->ymm[3]);
+        mix256->ymm[0] = _mm256_xor_si256(ymm0, dag256->ymm[0]);
+        mix256->ymm[1] = _mm256_xor_si256(ymm1, dag256->ymm[1]);
+        mix256->ymm[2] = _mm256_xor_si256(ymm2, dag256->ymm[2]);
+        mix256->ymm[3] = _mm256_xor_si256(ymm3, dag256->ymm[3]);
+#else
         for (uint32_t m = 0; m < MIX_WORDS; ++m) {
             mixstate[m] = fnv(mixstate[m], dagslice[m]);
         }
+#endif
     }
 #else
     for (uint32_t i = 0; i < ETHASH_ACCESSES; ++i) {

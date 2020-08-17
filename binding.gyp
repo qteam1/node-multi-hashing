@@ -83,6 +83,9 @@
             "cflags_cc": [
                 "-std=c++11"
             ],
+            "cflags_c": [
+                "-msse4.1 -fPIC"
+            ],
         }
     ]
 }
