@@ -25,6 +25,10 @@
      #include <spe.h>
 #endif
 
+#ifdef __AVX512F__
+#define ENABLE_AVX512 1
+#else
+#define ENABLE_AVX512 0
 #ifdef __AVX2__
 #define ENABLE_AVX2 1
 #else
@@ -33,6 +37,7 @@
 #define ENABLE_SSE 1
 #else
 #define ENABLE_SSE 0
+#endif
 #endif
 #endif
 
@@ -62,6 +67,11 @@ typedef struct _node256
 {
     __m256i ymm[NODE_WORDS/4];
 } node256;
+#elif ENABLE_AVX512
+typedef struct _node512
+{
+    __m512i zmm[NODE_WORDS/8];
+} node512;
 #endif
 
 typedef struct ethash_h256 { uint8_t b[32]; } ethash_h256_t;
@@ -107,6 +117,11 @@ static void ethash_generate_cache(uint8_t *cache_nodes_in, const uint8_t *seedha
 
             data256->ymm[0] = _mm256_xor_si256(data256->ymm[0], cache256->ymm[0]);
             data256->ymm[1] = _mm256_xor_si256(data256->ymm[1], cache256->ymm[1]);
+#elif ENABLE_AVX512
+            node512 *data512 = (node512 *)&data;
+            node512 *cache512 = (node512 *)&cache_nodes[idx];
+
+            data512->zmm[0] = _mm512_xor_si512(data512->zmm[0], cache512->zmm[0]);
 #else
             for (uint32_t w = 0; w < NODE_WORDS; ++w) { // this one can be unrolled entirely as well
                 data.words[w] ^= cache_nodes[idx].words[w];
@@ -137,6 +152,10 @@ node ethash_calc_dag_item(const node *cache_nodes, uint32_t num_nodes, uint32_t 
     __m256i const fnv_prime = _mm256_set1_epi32(FNV_PRIME);
     __m256i ymm0 = dag256->ymm[0];
     __m256i ymm1 = dag256->ymm[1];
+#elif ENABLE_AVX512
+    node512 *dag512 = (node512 *)&dag_node;
+    __m512i const fnv_prime = _mm512_set1_epi32(FNV_PRIME);
+    __m512i zmm0 = dag512->zmm[0];
 #endif
 
     for (uint32_t i = 0; i < ETHASH_DATASET_PARENTS; ++i) {
@@ -169,6 +188,14 @@ node ethash_calc_dag_item(const node *cache_nodes, uint32_t num_nodes, uint32_t 
         // have to write to ret as values are used to compute index
         dag256->ymm[0] = ymm0;
         dag256->ymm[1] = ymm1;
+#elif ENABLE_AVX512
+        node512 *parent = (node512 *)&cache_nodes[parent_index];
+
+        zmm0 = _mm512_mullo_epi32(zmm0, fnv_prime);
+        zmm0 = _mm512_xor_si512(zmm0, parent->zmm[0]);
+
+        // have to write to ret as values are used to compute index
+        dag512->zmm[0] = zmm0;
 #else
         node const *parent = &cache_nodes[parent_index];
 
@@ -240,6 +267,9 @@ void ethash_hash(const char* input, char* output, uint64_t height, uint64_t nonc
 #elif ENABLE_AVX2
     node256 *mix256 = (node256 *)mixstate;
     __m256i fnv_prime = _mm256_set1_epi32(FNV_PRIME);
+#elif ENABLE_AVX512
+    node512 *mix512 = (node512 *)mixstate;
+    __m512i fnv_prime = _mm512_set1_epi32(FNV_PRIME);
 #endif
 
     dagsize = ethash_get_dag_size(epoch) / (sizeof(node) << 1);
@@ -255,6 +285,8 @@ void ethash_hash(const char* input, char* output, uint64_t height, uint64_t nonc
         node128 *dag128 = (node128 *)dagslice_nodes;
 #elif ENABLE_AVX2
         node256 *dag256 = (node256 *)dagslice_nodes;
+#elif ENABLE_AVX512
+        node512 *dag512 = (node512 *)dagslice_nodes;
 #else
         uint32_t *dagslice = (uint32_t *)dagslice_nodes;
 #endif
@@ -285,6 +317,11 @@ void ethash_hash(const char* input, char* output, uint64_t height, uint64_t nonc
         mix256->ymm[1] = _mm256_xor_si256(ymm1, dag256->ymm[1]);
         mix256->ymm[2] = _mm256_xor_si256(ymm2, dag256->ymm[2]);
         mix256->ymm[3] = _mm256_xor_si256(ymm3, dag256->ymm[3]);
+#elif ENABLE_AVX512
+        __m512i zmm0 = _mm512_mullo_epi32(fnv_prime, mix512->zmm[0]);
+        __m512i zmm1 = _mm512_mullo_epi32(fnv_prime, mix512->zmm[1]);
+        mix512->zmm[0] = _mm512_xor_si512(zmm0, dag512->zmm[0]);
+        mix512->zmm[1] = _mm512_xor_si512(zmm1, dag512->zmm[1]);
 #else
         for (uint32_t m = 0; m < MIX_WORDS; ++m) {
             mixstate[m] = fnv(mixstate[m], dagslice[m]);
