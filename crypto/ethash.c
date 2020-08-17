@@ -14,11 +14,6 @@
 #define fnv(x, y)    (((x) * FNV_PRIME) ^ (y))
 #define fnv_reduce(v)  fnv(fnv(fnv((v)[0], (v)[1]), (v)[2]), (v)[3])
 
-typedef struct _DAG128
-{
-    uint32_t Columns[32];
-} DAG128;
-
 typedef union _node
 {
     uint8_t bytes[16 * 4];
@@ -92,10 +87,15 @@ static uint64_t current_epoch = -1;
 // output (result + mixhash) MUST have 64 bytes allocated (at least)
 void ethash_hash(const char* input, char* output, uint64_t height, uint64_t nonce)
 {
-    uint32_t mixstate[32], tmpbuf[24];
+    uint32_t tmpbuf[24];
     uint64_t epoch = height / ETHASH_EPOCH_LENGTH;
     uint64_t dagsize;
     uint32_t num_nodes = ethash_get_cache_size(epoch) / sizeof(node);
+#ifndef ETH_USE_NODE
+    uint32_t mixstate[32];
+#else
+    node mixstate[MIX_NODES + 1];
+#endif
 
     if (current_epoch != epoch) {
         uint64_t cache_size = num_nodes * sizeof(node);
@@ -115,34 +115,64 @@ void ethash_hash(const char* input, char* output, uint64_t height, uint64_t nonc
     memcpy(tmpbuf + 8, &nonce, 8);
     SHA3_512((uint8_t *)tmpbuf, (uint8_t *)tmpbuf, 40);
 
+#ifndef ETH_USE_NODE
     memcpy(mixstate, tmpbuf, 64);
+#else
+    memcpy(mixstate[0].bytes, tmpbuf, 64);
+#endif
 
     // The other half of the state is filled by simply
     // duplicating the first half of its initial value.
+#ifndef ETH_USE_NODE
     memcpy(mixstate + 16, mixstate, 64);
+#else
+    node* const mix = mixstate + 1;
+    for (uint32_t w = 0; w < MIX_WORDS; ++w) {
+        mix->words[w] = mixstate[0].words[w % NODE_WORDS];
+    }
+#endif
 
     dagsize = ethash_get_dag_size(epoch) / (sizeof(node) << 1);
 
     // Main mix of Ethash
-    for (uint32_t i = 0, init0 = mixstate[0], mixvalue = mixstate[0]; i < ETHASH_ACCESSES; ++i) {
-        uint32_t row = fnv(init0 ^ i, mixvalue) % dagsize;
-        node dag_slice_nodes[2];
-        dag_slice_nodes[0] = ethash_calc_dag_item(dag_cache, num_nodes, row << 1);
-        dag_slice_nodes[1] = ethash_calc_dag_item(dag_cache, num_nodes, (row << 1) + 1);
-        DAG128 *dagslice = (DAG128 *)dag_slice_nodes;
+#ifndef ETH_USE_NODE
+    for (uint32_t i = 0, init0 = mixstate[0]; i < ETHASH_ACCESSES; ++i) {
+        uint32_t index = fnv(init0 ^ i, mixstate[i % MIX_WORDS]) % dagsize;
+        node dagslice_nodes[2];
+        dagslice_nodes[0] = ethash_calc_dag_item(dag_cache, num_nodes, (index << 1) + 0);
+        dagslice_nodes[1] = ethash_calc_dag_item(dag_cache, num_nodes, (index << 1) + 1);
+        uint32_t *dagslice = (uint32_t *)dagslice_nodes;
 
-        for (uint32_t col = 0; col < 32; ++col) {
-            mixstate[col] = fnv(mixstate[col], dagslice->Columns[col]);
-            mixvalue = col == ((i + 1) & 0x1F) ? mixstate[col] : mixvalue;
+        for (uint32_t m = 0; m < MIX_WORDS; ++m) {
+            mixstate[m] = fnv(mixstate[m], dagslice[m]);
         }
     }
+#else
+    for (uint32_t i = 0; i < ETHASH_ACCESSES; ++i) {
+        uint32_t const index = fnv(mixstate->words[0] ^ i, mix->words[i % MIX_WORDS]) % dagsize;
+
+        for (unsigned n = 0; n < MIX_NODES; ++n) {
+            node dag_node;
+            dag_node = ethash_calc_dag_item(dag_cache, num_nodes, MIX_NODES * index + n);
+            for (unsigned w = 0; w < NODE_WORDS; ++w) {
+                mix[n].words[w] = fnv(mix[n].words[w], dag_node.words[w]);
+            }
+        }
+    }
+#endif
 
     // The reducing of the mix state directly into where
     // it will be hashed to produce the final hash. Note
     // that the initial hash is still in the first 64
     // bytes of tmpbuf - we're appending the mix hash.
+#ifndef ETH_USE_NODE
     for (int i = 0; i < 8; ++i)
         tmpbuf[i + 16] = fnv_reduce(mixstate + (i << 2));
+#else
+    for (int i = 0; i < MIX_WORDS / 4; ++i) {
+        tmpbuf[i + 16] = fnv_reduce(&mix->words[i << 2]);
+    }
+#endif
 
     memcpy(output + 32, tmpbuf + 16, 32);
     //memcpy(mixhash, tmpbuf + 16, 32);
